@@ -1,0 +1,1378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ShelfX - Library Management System</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #F5F0E8;
+      --bg-dark: #EDE6DA;
+      --fg: #2C2416;
+      --fg-muted: #6B5D4D;
+      --accent: #C9A227;
+      --accent-dark: #A88620;
+      --card: #FFFDF9;
+      --border: #D4C8B8;
+      --success: #4A7C59;
+      --warning: #C4783A;
+      --danger: #9B3D3D;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background-color: var(--bg);
+      color: var(--fg);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .font-display {
+      font-family: 'Cormorant Garamond', serif;
+    }
+
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg-dark);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--fg-muted);
+    }
+
+    /* Animations */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes slideInLeft {
+      from {
+        opacity: 0;
+        transform: translateX(-30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    @keyframes scaleIn {
+      from {
+        opacity: 0;
+        transform: scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    .animate-fade-in-up {
+      animation: fadeInUp 0.6s ease-out forwards;
+    }
+
+    .animate-fade-in {
+      animation: fadeIn 0.4s ease-out forwards;
+    }
+
+    .animate-slide-in-left {
+      animation: slideInLeft 0.5s ease-out forwards;
+    }
+
+    .animate-scale-in {
+      animation: scaleIn 0.3s ease-out forwards;
+    }
+
+    .stagger-1 { animation-delay: 0.1s; }
+    .stagger-2 { animation-delay: 0.2s; }
+    .stagger-3 { animation-delay: 0.3s; }
+    .stagger-4 { animation-delay: 0.4s; }
+    .stagger-5 { animation-delay: 0.5s; }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    /* Background pattern */
+    .bg-pattern {
+      background-image: 
+        radial-gradient(circle at 20% 80%, rgba(201, 162, 39, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(201, 162, 39, 0.06) 0%, transparent 40%),
+        radial-gradient(circle at 50% 50%, rgba(44, 36, 22, 0.02) 0%, transparent 80%);
+    }
+
+    /* Sidebar */
+    .sidebar {
+      background: linear-gradient(180deg, var(--fg) 0%, #1E1910 100%);
+      box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15);
+    }
+
+    .nav-item {
+      transition: all 0.25s ease;
+      position: relative;
+    }
+
+    .nav-item::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 3px;
+      height: 0;
+      background: var(--accent);
+      border-radius: 0 2px 2px 0;
+      transition: height 0.25s ease;
+    }
+
+    .nav-item:hover::before,
+    .nav-item.active::before {
+      height: 60%;
+    }
+
+    .nav-item:hover,
+    .nav-item.active {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--accent);
+    }
+
+    /* Cards */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(44, 36, 22, 0.04);
+      transition: all 0.3s ease;
+    }
+
+    .card:hover {
+      box-shadow: 0 8px 24px rgba(44, 36, 22, 0.1);
+      transform: translateY(-2px);
+    }
+
+    /* Stat cards */
+    .stat-card {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 100px;
+      height: 100px;
+      background: radial-gradient(circle, currentColor 0%, transparent 70%);
+      opacity: 0.05;
+      transform: translate(30%, -30%);
+    }
+
+    /* Book cards */
+    .book-card {
+      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .book-card:hover {
+      transform: translateY(-6px) scale(1.01);
+    }
+
+    .book-cover {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .book-cover::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.3) 50%, transparent 60%);
+      transform: translateX(-100%);
+      transition: transform 0.6s ease;
+    }
+
+    .book-card:hover .book-cover::after {
+      transform: translateX(100%);
+    }
+
+    /* Buttons */
+    .btn {
+      transition: all 0.25s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, transparent 50%);
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+
+    .btn:hover::after {
+      opacity: 1;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+      color: white;
+      box-shadow: 0 4px 12px rgba(201, 162, 39, 0.3);
+    }
+
+    .btn-primary:hover {
+      box-shadow: 0 6px 20px rgba(201, 162, 39, 0.4);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--fg);
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-dark);
+      border-color: var(--fg-muted);
+    }
+
+    /* Form inputs */
+    .input {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 16px;
+      transition: all 0.25s ease;
+      width: 100%;
+    }
+
+    .input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.15);
+    }
+
+    .input::placeholder {
+      color: var(--fg-muted);
+    }
+
+    /* Modal */
+    .modal-backdrop {
+      background: rgba(44, 36, 22, 0.6);
+      backdrop-filter: blur(4px);
+    }
+
+    .modal-content {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 24px 48px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Tables */
+    .table-row {
+      transition: background 0.2s ease;
+    }
+
+    .table-row:hover {
+      background: var(--bg);
+    }
+
+    /* Status badges */
+    .badge {
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .badge-success {
+      background: rgba(74, 124, 89, 0.15);
+      color: var(--success);
+    }
+
+    .badge-warning {
+      background: rgba(196, 120, 58, 0.15);
+      color: var(--warning);
+    }
+
+    .badge-danger {
+      background: rgba(155, 61, 61, 0.15);
+      color: var(--danger);
+    }
+
+    /* Focus states */
+    *:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    /* Loading state */
+    .skeleton {
+      background: linear-gradient(90deg, var(--border) 25%, var(--bg) 50%, var(--border) 75%);
+      background-size: 200% 100%;
+      animation: skeleton-loading 1.5s infinite;
+    }
+
+    @keyframes skeleton-loading {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* Tab underline */
+    .tab-item {
+      position: relative;
+    }
+
+    .tab-item::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      width: 0;
+      height: 2px;
+      background: var(--accent);
+      transition: all 0.3s ease;
+      transform: translateX(-50%);
+    }
+
+    .tab-item.active::after,
+    .tab-item:hover::after {
+      width: 100%;
+    }
+
+    /* Hide sections by default */
+    .section {
+      display: none;
+    }
+    .section.active {
+      display: block;
+    }
+
+    /* Notification dot */
+    .notification-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--danger);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+  </style>
+</head>
+<body class="bg-pattern">
+  <div class="flex min-h-screen">
+    <!-- Sidebar -->
+    <aside class="sidebar w-64 flex-shrink-0 fixed h-full z-40 lg:relative lg:translate-x-0 -translate-x-full transition-transform duration-300" id="sidebar">
+      <div class="p-6 border-b border-white/10">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-500 to-amber-700 flex items-center justify-center">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+            </svg>
+          </div>
+          <div>
+            <h1 class="font-display text-xl font-bold text-white tracking-wide">ShelfX</h1>
+            <p class="text-xs text-white/50">Library System</p>
+          </div>
+        </div>
+      </div>
+
+      <nav class="p-4">
+        <p class="text-xs text-white/30 uppercase tracking-wider mb-4 px-3">Main Menu</p>
+        <ul class="space-y-1">
+          <li>
+            <button class="nav-item active w-full flex items-center gap-3 px-3 py-3 rounded-lg text-white/80 text-sm" data-section="dashboard">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/>
+              </svg>
+              Dashboard
+            </button>
+          </li>
+          <li>
+            <button class="nav-item w-full flex items-center gap-3 px-3 py-3 rounded-lg text-white/80 text-sm" data-section="catalog">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+              </svg>
+              Book Catalog
+            </button>
+          </li>
+          <li>
+            <button class="nav-item w-full flex items-center gap-3 px-3 py-3 rounded-lg text-white/80 text-sm" data-section="members">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+              </svg>
+              Members
+            </button>
+          </li>
+          <li>
+            <button class="nav-item w-full flex items-center gap-3 px-3 py-3 rounded-lg text-white/80 text-sm" data-section="transactions">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+              </svg>
+              Transactions
+              <span class="notification-dot ml-auto"></span>
+            </button>
+          </li>
+        </ul>
+
+        <p class="text-xs text-white/30 uppercase tracking-wider mt-8 mb-4 px-3">Reports</p>
+        <ul class="space-y-1">
+          <li>
+            <button class="nav-item w-full flex items-center gap-3 px-3 py-3 rounded-lg text-white/80 text-sm" data-section="analytics">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+              </svg>
+              Analytics
+            </button>
+          </li>
+          <li>
+            <button class="nav-item w-full flex items-center gap-3 px-3 py-3 rounded-lg text-white/80 text-sm" data-section="settings">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+              </svg>
+              Settings
+            </button>
+          </li>
+        </ul>
+      </nav>
+
+      <!-- User profile -->
+      <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-white/10">
+        <div class="flex items-center gap-3 px-3 py-2">
+          <div class="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white font-semibold text-sm">
+            AK
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm text-white font-medium truncate">Amelia Knowles</p>
+            <p class="text-xs text-white/50">Head Librarian</p>
+          </div>
+          <button class="text-white/50 hover:text-white transition-colors" aria-label="Logout">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Mobile menu button -->
+    <button id="mobileMenuBtn" class="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-white shadow-lg" aria-label="Toggle menu">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+      </svg>
+    </button>
+
+    <!-- Main content -->
+    <main class="flex-1 lg:ml-0 min-h-screen">
+      <!-- Header -->
+      <header class="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-gray-200/50">
+        <div class="flex items-center justify-between px-6 py-4">
+          <div class="flex items-center gap-4 flex-1">
+            <div class="relative flex-1 max-w-md">
+              <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+              </svg>
+              <input type="search" id="globalSearch" placeholder="Search books, members, ISBN..." class="input pl-10 pr-4 py-2.5 text-sm" aria-label="Global search">
+            </div>
+          </div>
+          <div class="flex items-center gap-4">
+            <button class="relative p-2 rounded-lg hover:bg-gray-100 transition-colors" aria-label="Notifications">
+              <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+              </svg>
+              <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
+            </button>
+            <button class="btn btn-primary px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2" id="addBookBtn">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+              </svg>
+              Add Book
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <!-- Dashboard Section -->
+      <section id="dashboard" class="section active p-6">
+        <div class="mb-8">
+          <h2 class="font-display text-3xl font-bold mb-2 animate-fade-in-up">Welcome back, Amelia</h2>
+          <p class="text-gray-600 animate-fade-in-up stagger-1">Here's what's happening in your library today.</p>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div class="card stat-card p-6 animate-fade-in-up stagger-1" style="color: var(--accent)">
+            <div class="flex items-start justify-between">
+              <div>
+                <p class="text-sm text-gray-500 mb-1">Total Books</p>
+                <p class="text-3xl font-bold" style="color: var(--fg)">12,847</p>
+                <p class="text-sm text-green-600 mt-2 flex items-center gap-1">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
+                  </svg>
+                  +234 this month
+                </p>
+              </div>
+              <div class="w-12 h-12 rounded-xl flex items-center justify-center" style="background: rgba(201, 162, 39, 0.1)">
+                <svg class="w-6 h-6" style="color: var(--accent)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div class="card stat-card p-6 animate-fade-in-up stagger-2" style="color: var(--success)">
+            <div class="flex items-start justify-between">
+              <div>
+                <p class="text-sm text-gray-500 mb-1">Active Members</p>
+                <p class="text-3xl font-bold" style="color: var(--fg)">3,429</p>
+                <p class="text-sm text-green-600 mt-2 flex items-center gap-1">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
+                  </svg>
+                  +89 this month
+                </p>
+              </div>
+              <div class="w-12 h-12 rounded-xl flex items-center justify-center" style="background: rgba(74, 124, 89, 0.1)">
+                <svg class="w-6 h-6" style="color: var(--success)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div class="card stat-card p-6 animate-fade-in-up stagger-3" style="color: var(--warning)">
+            <div class="flex items-start justify-between">
+              <div>
+                <p class="text-sm text-gray-500 mb-1">Books Borrowed</p>
+                <p class="text-3xl font-bold" style="color: var(--fg)">847</p>
+                <p class="text-sm text-amber-600 mt-2 flex items-center gap-1">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  42 due today
+                </p>
+              </div>
+              <div class="w-12 h-12 rounded-xl flex items-center justify-center" style="background: rgba(196, 120, 58, 0.1)">
+                <svg class="w-6 h-6" style="color: var(--warning)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div class="card stat-card p-6 animate-fade-in-up stagger-4" style="color: var(--danger)">
+            <div class="flex items-start justify-between">
+              <div>
+                <p class="text-sm text-gray-500 mb-1">Overdue Books</p>
+                <p class="text-3xl font-bold" style="color: var(--fg)">23</p>
+                <p class="text-sm text-red-600 mt-2 flex items-center gap-1">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                  </svg>
+                  Needs attention
+                </p>
+              </div>
+              <div class="w-12 h-12 rounded-xl flex items-center justify-center" style="background: rgba(155, 61, 61, 0.1)">
+                <svg class="w-6 h-6" style="color: var(--danger)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Activity & Popular Books -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- Recent Activity -->
+          <div class="lg:col-span-2 card p-6 animate-fade-in-up stagger-4">
+            <div class="flex items-center justify-between mb-6">
+              <h3 class="font-display text-xl font-semibold">Recent Activity</h3>
+              <button class="text-sm text-amber-600 hover:text-amber-700 font-medium">View All</button>
+            </div>
+            <div class="space-y-4" id="activityList">
+              <!-- Activity items rendered by JS -->
+            </div>
+          </div>
+
+          <!-- Popular Books -->
+          <div class="card p-6 animate-fade-in-up stagger-5">
+            <div class="flex items-center justify-between mb-6">
+              <h3 class="font-display text-xl font-semibold">Trending Books</h3>
+              <button class="text-sm text-amber-600 hover:text-amber-700 font-medium">See More</button>
+            </div>
+            <div class="space-y-4" id="trendingList">
+              <!-- Trending items rendered by JS -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Catalog Section -->
+      <section id="catalog" class="section p-6">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+          <div>
+            <h2 class="font-display text-3xl font-bold mb-2">Book Catalog</h2>
+            <p class="text-gray-600">Browse and manage your library collection</p>
+          </div>
+          <div class="flex items-center gap-3">
+            <select id="categoryFilter" class="input py-2.5 text-sm w-40" aria-label="Filter by category">
+              <option value="">All Categories</option>
+              <option value="fiction">Fiction</option>
+              <option value="non-fiction">Non-Fiction</option>
+              <option value="science">Science</option>
+              <option value="history">History</option>
+              <option value="biography">Biography</option>
+            </select>
+            <select id="statusFilter" class="input py-2.5 text-sm w-36" aria-label="Filter by status">
+              <option value="">All Status</option>
+              <option value="available">Available</option>
+              <option value="borrowed">Borrowed</option>
+              <option value="reserved">Reserved</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Books Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="booksGrid">
+          <!-- Books rendered by JS -->
+        </div>
+      </section>
+
+      <!-- Members Section -->
+      <section id="members" class="section p-6">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+          <div>
+            <h2 class="font-display text-3xl font-bold mb-2">Library Members</h2>
+            <p class="text-gray-600">Manage registered members and their accounts</p>
+          </div>
+          <button class="btn btn-primary px-4 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2" id="addMemberBtn">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            Add Member
+          </button>
+        </div>
+
+        <div class="card overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead class="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th class="text-left py-4 px-6 text-sm font-semibold text-gray-600">Member</th>
+                  <th class="text-left py-4 px-6 text-sm font-semibold text-gray-600">ID</th>
+                  <th class="text-left py-4 px-6 text-sm font-semibold text-gray-600">Email</th>
+                  <th class="text-left py-4 px-6 text-sm font-semibold text-gray-600">Books Borrowed</th>
+                  <th class="text-left py-4 px-6 text-sm font-semibold text-gray-600">Status</th>
+                  <th class="text-left py-4 px-6 text-sm font-semibold text-gray-600">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="membersTable">
+                <!-- Members rendered by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Transactions Section -->
+      <section id="transactions" class="section p-6">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+          <div>
+            <h2 class="font-display text-3xl font-bold mb-2">Transactions</h2>
+            <p class="text-gray-600">Track book checkouts, returns, and reservations</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button class="tab-item active px-4 py-2 text-sm font-medium" data-tab="all">All</button>
+            <button class="tab-item px-4 py-2 text-sm font-medium text-gray-500" data-tab="borrowed">Borrowed</button>
+            <button class="tab-item px-4 py-2 text-sm font-medium text-gray-500" data-tab="returned">Returned</button>
+            <button class="tab-item px-4 py-2 text-sm font-medium text-gray-500" data-tab="overdue">Overdue</button>
+          </div>
+        </div>
+
+        <div class="card overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead class="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th class="text-left py-4 px-6 text-sm font-semibold text-gray-600">Transaction ID</th>
+                  <th class="text-left py-4 px-6 text-sm font-semibold text-gray-600">Book</th>
+                  <th class="text-left py-4 px-6 text-sm font-semibold text-gray-600">Member</th>
+                  <th class="text-left py-4 px-6 text-sm font-semibold text-gray-600">Date</th>
+                  <th class="text-left py-4 px-6 text-sm font-semibold text-gray-600">Due Date</th>
+                  <th class="text-left py-4 px-6 text-sm font-semibold text-gray-600">Status</th>
+                  <th class="text-left py-4 px-6 text-sm font-semibold text-gray-600">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="transactionsTable">
+                <!-- Transactions rendered by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Analytics Section -->
+      <section id="analytics" class="section p-6">
+        <div class="mb-8">
+          <h2 class="font-display text-3xl font-bold mb-2">Analytics Dashboard</h2>
+          <p class="text-gray-600">Insights and statistics about your library</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <!-- Borrowing Trends -->
+          <div class="card p-6">
+            <h3 class="font-display text-xl font-semibold mb-6">Weekly Borrowing Trends</h3>
+            <div class="h-64 flex items-end justify-between gap-2" id="borrowChart">
+              <!-- Chart rendered by JS -->
+            </div>
+            <div class="flex justify-between mt-4 text-xs text-gray-500">
+              <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+            </div>
+          </div>
+
+          <!-- Category Distribution -->
+          <div class="card p-6">
+            <h3 class="font-display text-xl font-semibold mb-6">Books by Category</h3>
+            <div class="space-y-4" id="categoryChart">
+              <!-- Category bars rendered by JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Top Members -->
+        <div class="card p-6">
+          <h3 class="font-display text-xl font-semibold mb-6">Top Borrowers This Month</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" id="topBorrowers">
+            <!-- Top borrowers rendered by JS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- Settings Section -->
+      <section id="settings" class="section p-6">
+        <div class="mb-8">
+          <h2 class="font-display text-3xl font-bold mb-2">Settings</h2>
+          <p class="text-gray-600">Configure your library system preferences</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="card p-6">
+            <h3 class="font-display text-xl font-semibold mb-6">General Settings</h3>
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium mb-2">Library Name</label>
+                <input type="text" value="ShelfX Library" class="input">
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-2">Loan Period (Days)</label>
+                <input type="number" value="14" class="input">
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-2">Max Books Per Member</label>
+                <input type="number" value="5" class="input">
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-2">Late Fee (per day)</label>
+                <input type="text" value="$0.50" class="input">
+              </div>
+            </div>
+          </div>
+
+          <div class="card p-6">
+            <h3 class="font-display text-xl font-semibold mb-6">Notification Settings</h3>
+            <div class="space-y-4">
+              <label class="flex items-center justify-between p-3 rounded-lg bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors">
+                <div>
+                  <p class="font-medium">Due Date Reminders</p>
+                  <p class="text-sm text-gray-500">Send reminders 3 days before due date</p>
+                </div>
+                <input type="checkbox" checked class="w-5 h-5 accent-amber-500">
+              </label>
+              <label class="flex items-center justify-between p-3 rounded-lg bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors">
+                <div>
+                  <p class="font-medium">Overdue Notices</p>
+                  <p class="text-sm text-gray-500">Daily notifications for overdue books</p>
+                </div>
+                <input type="checkbox" checked class="w-5 h-5 accent-amber-500">
+              </label>
+              <label class="flex items-center justify-between p-3 rounded-lg bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors">
+                <div>
+                  <p class="font-medium">New Book Alerts</p>
+                  <p class="text-sm text-gray-500">Notify members about new arrivals</p>
+                </div>
+                <input type="checkbox" class="w-5 h-5 accent-amber-500">
+              </label>
+              <label class="flex items-center justify-between p-3 rounded-lg bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors">
+                <div>
+                  <p class="font-medium">Reservation Updates</p>
+                  <p class="text-sm text-gray-500">Alert when reserved books become available</p>
+                </div>
+                <input type="checkbox" checked class="w-5 h-5 accent-amber-500">
+              </label>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Add Book Modal -->
+  <div id="addBookModal" class="fixed inset-0 z-50 hidden">
+    <div class="modal-backdrop absolute inset-0" id="modalBackdrop"></div>
+    <div class="flex items-center justify-center min-h-screen p-4">
+      <div class="modal-content relative w-full max-w-lg p-6 animate-scale-in">
+        <button id="closeModal" class="absolute top-4 right-4 p-2 rounded-lg hover:bg-gray-100 transition-colors" aria-label="Close modal">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+        <h3 class="font-display text-2xl font-bold mb-6">Add New Book</h3>
+        <form id="addBookForm" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium mb-2">Book Title</label>
+            <input type="text" name="title" required class="input" placeholder="Enter book title">
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-2">Author</label>
+            <input type="text" name="author" required class="input" placeholder="Enter author name">
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium mb-2">ISBN</label>
+              <input type="text" name="isbn" class="input" placeholder="ISBN number">
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-2">Category</label>
+              <select name="category" class="input">
+                <option value="fiction">Fiction</option>
+                <option value="non-fiction">Non-Fiction</option>
+                <option value="science">Science</option>
+                <option value="history">History</option>
+                <option value="biography">Biography</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium mb-2">Published Year</label>
+              <input type="number" name="year" class="input" placeholder="Year">
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-2">Copies</label>
+              <input type="number" name="copies" value="1" min="1" class="input">
+            </div>
+          </div>
+          <div class="flex gap-3 pt-4">
+            <button type="button" id="cancelAddBook" class="btn btn-secondary flex-1 py-2.5 rounded-lg text-sm font-medium">Cancel</button>
+            <button type="submit" class="btn btn-primary flex-1 py-2.5 rounded-lg text-sm font-medium">Add Book</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed bottom-6 right-6 z-50 hidden">
+    <div class="bg-gray-900 text-white px-6 py-4 rounded-lg shadow-xl flex items-center gap-3 animate-slide-in-left">
+      <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+      </svg>
+      <span id="toastMessage">Action completed successfully</span>
+    </div>
+  </div>
+
+  <script>
+    // ============ DATA ============
+    const booksData = [
+      { id: 1, title: "The Great Gatsby", author: "F. Scott Fitzgerald", isbn: "978-0743273565", category: "fiction", year: 1925, copies: 3, available: 2, cover: "#2D4A3E" },
+      { id: 2, title: "To Kill a Mockingbird", author: "Harper Lee", isbn: "978-0061120084", category: "fiction", year: 1960, copies: 4, available: 1, cover: "#4A3A2D" },
+      { id: 3, title: "A Brief History of Time", author: "Stephen Hawking", isbn: "978-0553380163", category: "science", year: 1988, copies: 2, available: 2, cover: "#2D3A4A" },
+      { id: 4, title: "The Art of War", author: "Sun Tzu", isbn: "978-1599869773", category: "history", year: -500, copies: 5, available: 3, cover: "#4A2D3A" },
+      { id: 5, title: "Steve Jobs", author: "Walter Isaacson", isbn: "978-1451648539", category: "biography", year: 2011, copies: 2, available: 0, cover: "#3A4A2D" },
+      { id: 6, title: "1984", author: "George Orwell", isbn: "978-0451524935", category: "fiction", year: 1949, copies: 6, available: 4, cover: "#4A4A2D" },
+      { id: 7, title: "Sapiens", author: "Yuval Noah Harari", isbn: "978-0062316097", category: "non-fiction", year: 2014, copies: 3, available: 2, cover: "#2D4A4A" },
+      { id: 8, title: "The Origin of Species", author: "Charles Darwin", isbn: "978-0451529060", category: "science", year: 1859, copies: 2, available: 2, cover: "#3A2D4A" },
+      { id: 9, title: "Pride and Prejudice", author: "Jane Austen", isbn: "978-0141439518", category: "fiction", year: 1813, copies: 4, available: 3, cover: "#4A2D4A" },
+      { id: 10, title: "The Diary of a Young Girl", author: "Anne Frank", isbn: "978-0553296983", category: "biography", year: 1947, copies: 3, available: 1, cover: "#2D3A3A" },
+      { id: 11, title: "Crime and Punishment", author: "Fyodor Dostoevsky", isbn: "978-0143058144", category: "fiction", year: 1866, copies: 2, available: 2, cover: "#3A3A2D" },
+      { id: 12, title: "The Selfish Gene", author: "Richard Dawkins", isbn: "978-0192860927", category: "science", year: 1976, copies: 2, available: 0, cover: "#2D2D4A" }
+    ];
+
+    const membersData = [
+      { id: "M001", name: "James Wilson", email: "james.wilson@email.com", borrowed: 3, status: "active", avatar: "JW" },
+      { id: "M002", name: "Sarah Chen", email: "sarah.chen@email.com", borrowed: 1, status: "active", avatar: "SC" },
+      { id: "M003", name: "Michael Brown", email: "m.brown@email.com", borrowed: 5, status: "active", avatar: "MB" },
+      { id: "M004", name: "Emily Davis", email: "emily.d@email.com", borrowed: 0, status: "inactive", avatar: "ED" },
+      { id: "M005", name: "Robert Taylor", email: "r.taylor@email.com", borrowed: 2, status: "active", avatar: "RT" },
+      { id: "M006", name: "Lisa Anderson", email: "l.anderson@email.com", borrowed: 4, status: "suspended", avatar: "LA" },
+      { id: "M007", name: "David Martinez", email: "d.martinez@email.com", borrowed: 2, status: "active", avatar: "DM" }
+    ];
+
+    const transactionsData = [
+      { id: "T001", bookId: 1, book: "The Great Gatsby", member: "James Wilson", date: "2024-01-15", dueDate: "2024-01-29", status: "borrowed" },
+      { id: "T002", bookId: 5, book: "Steve Jobs", member: "Sarah Chen", date: "2024-01-10", dueDate: "2024-01-24", status: "overdue" },
+      { id: "T003", bookId: 2, book: "To Kill a Mockingbird", member: "Michael Brown", date: "2024-01-12", dueDate: "2024-01-26", status: "borrowed" },
+      { id: "T004", bookId: 7, book: "Sapiens", member: "Emily Davis", date: "2024-01-08", dueDate: "2024-01-22", status: "returned" },
+      { id: "T005", bookId: 12, book: "The Selfish Gene", member: "Robert Taylor", date: "2024-01-14", dueDate: "2024-01-28", status: "borrowed" },
+      { id: "T006", bookId: 3, book: "A Brief History of Time", member: "Lisa Anderson", date: "2024-01-05", dueDate: "2024-01-19", status: "overdue" },
+      { id: "T007", bookId: 9, book: "Pride and Prejudice", member: "David Martinez", date: "2024-01-16", dueDate: "2024-01-30", status: "borrowed" },
+      { id: "T008", bookId: 6, book: "1984", member: "James Wilson", date: "2024-01-11", dueDate: "2024-01-25", status: "borrowed" }
+    ];
+
+    const activityData = [
+      { type: "borrow", book: "The Great Gatsby", member: "James Wilson", time: "10 min ago" },
+      { type: "return", book: "Atomic Habits", member: "Sarah Chen", time: "25 min ago" },
+      { type: "reserve", book: "Steve Jobs", member: "Michael Brown", time: "1 hour ago" },
+      { type: "new", book: "The Midnight Library", member: "System", time: "2 hours ago" },
+      { type: "borrow", book: "Sapiens", member: "Emily Davis", time: "3 hours ago" }
+    ];
+
+    const borrowChartData = [45, 62, 38, 71, 53, 89, 34];
+
+    const categoryData = [
+      { name: "Fiction", count: 4523, color: "#C9A227" },
+      { name: "Non-Fiction", count: 2847, color: "#4A7C59" },
+      { name: "Science", count: 1892, color: "#2D4A6A" },
+      { name: "History", count: 1654, color: "#8B5A2B" },
+      { name: "Biography", count: 1931, color: "#6B4A7C" }
+    ];
+
+    // ============ DOM ELEMENTS ============
+    const sidebar = document.getElementById('sidebar');
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const navItems = document.querySelectorAll('.nav-item');
+    const sections = document.querySelectorAll('.section');
+    const booksGrid = document.getElementById('booksGrid');
+    const membersTable = document.getElementById('membersTable');
+    const transactionsTable = document.getElementById('transactionsTable');
+    const activityList = document.getElementById('activityList');
+    const trendingList = document.getElementById('trendingList');
+    const borrowChart = document.getElementById('borrowChart');
+    const categoryChart = document.getElementById('categoryChart');
+    const topBorrowers = document.getElementById('topBorrowers');
+    const addBookModal = document.getElementById('addBookModal');
+    const addBookBtn = document.getElementById('addBookBtn');
+    const closeModal = document.getElementById('closeModal');
+    const cancelAddBook = document.getElementById('cancelAddBook');
+    const modalBackdrop = document.getElementById('modalBackdrop');
+    const addBookForm = document.getElementById('addBookForm');
+    const toast = document.getElementById('toast');
+    const toastMessage = document.getElementById('toastMessage');
+    const categoryFilter = document.getElementById('categoryFilter');
+    const statusFilter = document.getElementById('statusFilter');
+    const globalSearch = document.getElementById('globalSearch');
+    const tabItems = document.querySelectorAll('.tab-item');
+
+    // ============ RENDER FUNCTIONS ============
+    function renderBooks(filter = {}) {
+      let filtered = [...booksData];
+      
+      if (filter.category) {
+        filtered = filtered.filter(b => b.category === filter.category);
+      }
+      if (filter.status) {
+        if (filter.status === 'available') filtered = filtered.filter(b => b.available > 0);
+        else if (filter.status === 'borrowed') filtered = filtered.filter(b => b.available < b.copies);
+        else if (filter.status === 'reserved') filtered = filtered.filter(b => b.available === 0);
+      }
+      if (filter.search) {
+        const search = filter.search.toLowerCase();
+        filtered = filtered.filter(b => 
+          b.title.toLowerCase().includes(search) || 
+          b.author.toLowerCase().includes(search) ||
+          b.isbn.includes(search)
+        );
+      }
+
+      booksGrid.innerHTML = filtered.map((book, i) => `
+        <div class="book-card card overflow-hidden animate-fade-in-up" style="animation-delay: ${i * 0.05}s">
+          <div class="book-cover h-48 relative" style="background: ${book.cover}">
+            <div class="absolute inset-0 flex items-center justify-center">
+              <svg class="w-16 h-16 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+              </svg>
+            </div>
+            <div class="absolute top-3 right-3">
+              <span class="badge ${book.available > 0 ? 'badge-success' : 'badge-danger'}">
+                ${book.available > 0 ? `${book.available} Available` : 'Borrowed'}
+              </span>
+            </div>
+          </div>
+          <div class="p-4">
+            <h4 class="font-display text-lg font-semibold mb-1 line-clamp-1">${book.title}</h4>
+            <p class="text-sm text-gray-500 mb-3">${book.author}</p>
+            <div class="flex items-center justify-between text-xs text-gray-400">
+              <span>${book.category}</span>
+              <span>${book.year > 0 ? book.year : 'Ancient'}</span>
+            </div>
+            <div class="flex gap-2 mt-4">
+              <button class="btn btn-secondary flex-1 py-2 rounded-lg text-xs font-medium" onclick="viewBook(${book.id})">Details</button>
+              <button class="btn btn-primary flex-1 py-2 rounded-lg text-xs font-medium" ${book.available === 0 ? 'disabled style="opacity:0.5;cursor:not-allowed"' : ''} onclick="borrowBook(${book.id})">
+                ${book.available > 0 ? 'Borrow' : 'Reserve'}
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderMembers() {
+      membersTable.innerHTML = membersData.map(member => `
+        <tr class="table-row border-b border-gray-100">
+          <td class="py-4 px-6">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white text-sm font-semibold">
+                ${member.avatar}
+              </div>
+              <span class="font-medium">${member.name}</span>
+            </div>
+          </td>
+          <td class="py-4 px-6 text-gray-600">${member.id}</td>
+          <td class="py-4 px-6 text-gray-600">${member.email}</td>
+          <td class="py-4 px-6">${member.borrowed}</td>
+          <td class="py-4 px-6">
+            <span class="badge ${member.status === 'active' ? 'badge-success' : member.status === 'suspended' ? 'badge-danger' : 'badge-warning'}">
+              ${member.status}
+            </span>
+          </td>
+          <td class="py-4 px-6">
+            <button class="p-2 rounded-lg hover:bg-gray-100 transition-colors" aria-label="Edit member">
+              <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+              </svg>
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function renderTransactions(filter = 'all') {
+      let filtered = [...transactionsData];
+      if (filter !== 'all') {
+        filtered = filtered.filter(t => t.status === filter);
+      }
+
+      transactionsTable.innerHTML = filtered.map(t => `
+        <tr class="table-row border-b border-gray-100">
+          <td class="py-4 px-6 font-mono text-sm">${t.id}</td>
+          <td class="py-4 px-6 font-medium">${t.book}</td>
+          <td class="py-4 px-6 text-gray-600">${t.member}</td>
+          <td class="py-4 px-6 text-gray-600">${t.date}</td>
+          <td class="py-4 px-6 text-gray-600">${t.dueDate}</td>
+          <td class="py-4 px-6">
+            <span class="badge ${t.status === 'returned' ? 'badge-success' : t.status === 'overdue' ? 'badge-danger' : 'badge-warning'}">
+              ${t.status}
+            </span>
+          </td>
+          <td class="py-4 px-6">
+            ${t.status !== 'returned' ? `
+              <button class="btn btn-secondary px-3 py-1.5 rounded-lg text-xs font-medium" onclick="returnBook('${t.id}')">Return</button>
+            ` : '<span class="text-gray-400 text-sm">Completed</span>'}
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function renderActivity() {
+      const icons = {
+        borrow: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>',
+        return: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>',
+        reserve: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>',
+        new: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>'
+      };
+      
+      const colors = {
+        borrow: 'bg-blue-100 text-blue-600',
+        return: 'bg-green-100 text-green-600',
+        reserve: 'bg-amber-100 text-amber-600',
+        new: 'bg-purple-100 text-purple-600'
+      };
+
+      activityList.innerHTML = activityData.map((activity, i) => `
+        <div class="flex items-start gap-4 p-3 rounded-lg hover:bg-gray-50 transition-colors animate-fade-in-up" style="animation-delay: ${i * 0.1}s">
+          <div class="w-10 h-10 rounded-full ${colors[activity.type]} flex items-center justify-center flex-shrink-0">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              ${icons[activity.type]}
+            </svg>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm">
+              <span class="font-medium">${activity.member}</span>
+              ${activity.type === 'borrow' ? ' borrowed ' : activity.type === 'return' ? ' returned ' : activity.type === 'reserve' ? ' reserved ' : ' added '}
+              <span class="font-medium">${activity.book}</span>
+            </p>
+            <p class="text-xs text-gray-400 mt-1">${activity.time}</p>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderTrending() {
+      const trending = booksData.slice(0, 4);
+      trendingList.innerHTML = trending.map((book, i) => `
+        <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer animate-fade-in-up" style="animation-delay: ${i * 0.1}s">
+          <div class="w-12 h-16 rounded-lg flex items-center justify-center text-white/30" style="background: ${book.cover}">
+            <span class="text-lg font-bold text-white/50">${i + 1}</span>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="font-medium text-sm truncate">${book.title}</p>
+            <p class="text-xs text-gray-500">${book.author}</p>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderBorrowChart() {
+      const maxVal = Math.max(...borrowChartData);
+      borrowChart.innerHTML = borrowChartData.map((val, i) => {
+        const height = Math.max(10, (val / maxVal) * 100);
+        return `
+          <div class="flex-1 flex flex-col items-center gap-2 animate-fade-in-up" style="animation-delay: ${i * 0.1}s">
+            <div class="w-full bg-amber-100 rounded-t-lg relative overflow-hidden" style="height: ${height}%">
+              <div class="absolute inset-0 bg-gradient-to-t from-amber-500 to-amber-400"></div>
+            </div>
+            <span class="text-xs text-gray-500">${val}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderCategoryChart() {
+      const maxCount = Math.max(...categoryData.map(c => c.count));
+      categoryChart.innerHTML = categoryData.map((cat, i) => `
+        <div class="animate-fade-in-up" style="animation-delay: ${i * 0.1}s">
+          <div class="flex justify-between text-sm mb-1">
+            <span class="font-medium">${cat.name}</span>
+            <span class="text-gray-500">${cat.count.toLocaleString()}</span>
+          </div>
+          <div class="h-3 bg-gray-100 rounded-full overflow-hidden">
+            <div class="h-full rounded-full transition-all duration-1000" style="width: ${(cat.count / maxCount) * 100}%; background: ${cat.color}"></div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderTopBorrowers() {
+      const top = membersData.filter(m => m.status === 'active').sort((a, b) => b.borrowed - a.borrowed).slice(0, 4);
+      topBorrowers.innerHTML = top.map((member, i) => `
+        <div class="flex items-center gap-4 p-4 rounded-xl bg-gray-50 animate-fade-in-up" style="animation-delay: ${i * 0.1}s">
+          <div class="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white font-semibold">
+            ${member.avatar}
+          </div>
+          <div>
+            <p class="font-medium">${member.name}</p>
+            <p class="text-sm text-gray-500">${member.borrowed} books borrowed</p>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ============ EVENT HANDLERS ============
+    function showToast(message) {
+      toastMessage.textContent = message;
+      toast.classList.remove('hidden');
+      setTimeout(() => toast.classList.add('hidden'), 3000);
+    }
+
+    function openModal() {
+      addBookModal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeModalFn() {
+      addBookModal.classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+
+    function switchSection(sectionId) {
+      sections.forEach(s => s.classList.remove('active'));
+      navItems.forEach(n => n.classList.remove('active'));
+      
+      const section = document.getElementById(sectionId);
+      const navItem = document.querySelector(`[data-section="${sectionId}"]`);
+      
+      if (section) section.classList.add('active');
+      if (navItem) navItem.classList.add('active');
+    }
+
+    // Navigation
+    navItems.forEach(item => {
+      item.addEventListener('click', () => {
+        const sectionId = item.dataset.section;
+        if (sectionId) {
+          switchSection(sectionId);
+          if (window.innerWidth < 1024) {
+            sidebar.classList.add('-translate-x-full');
+          }
+        }
+      });
+    });
+
+    // Mobile menu
+    mobileMenuBtn.addEventListener('click', () => {
+      sidebar.classList.toggle('-translate-x-full');
+    });
+
+    // Modal handlers
+    addBookBtn.addEventListener('click', openModal);
+    closeModal.addEventListener('click', closeModalFn);
+    cancelAddBook.addEventListener('click', closeModalFn);
+    modalBackdrop.addEventListener('click', closeModalFn);
+
+    // Add book form
+    addBookForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const newBook = {
+        id: booksData.length + 1,
+        title: formData.get('title'),
+        author: formData.get('author'),
+        isbn: formData.get('isbn'),
+        category: formData.get('category'),
+        year: parseInt(formData.get('year')) || 2024,
+        copies: parseInt(formData.get('copies')) || 1,
+        available: parseInt(formData.get('copies')) || 1,
+        cover: `hsl(${Math.random() * 360}, 30%, 25%)`
+      };
+      booksData.push(newBook);
+      renderBooks();
+      closeModalFn();
+      addBookForm.reset();
+      showToast('Book added successfully!');
+    });
+
+    // Filters
+    categoryFilter.addEventListener('change', () => {
+      renderBooks({ category: categoryFilter.value, status: statusFilter.value });
+    });
+
+    statusFilter.addEventListener('change', () => {
+      renderBooks({ category: categoryFilter.value, status: statusFilter.value });
+    });
+
+    // Global search
+    let searchTimeout;
+    globalSearch.addEventListener('input', (e) => {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        renderBooks({ search: e.target.value });
+        if (e.target.value) switchSection('catalog');
+      }, 300);
+    });
+
+    // Tabs
+    tabItems.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabItems.forEach(t => {
+          t.classList.remove('active');
+          t.classList.add('text-gray-500');
+        });
+        tab.classList.add('active');
+        tab.classList.remove('text-gray-500');
+        renderTransactions(tab.dataset.tab);
+      });
+    });
+
+    // Book actions
+    function viewBook(id) {
+      const book = booksData.find(b => b.id === id);
+      if (book) {
+        showToast(`Viewing: ${book.title}`);
+      }
+    }
+
+    function borrowBook(id) {
+      const book = booksData.find(b => b.id === id);
+      if (book && book.available > 0) {
+        book.available--;
+        renderBooks({ category: categoryFilter.value, status: statusFilter.value });
+        showToast(`Borrowed: ${book.title}`);
+      }
+    }
+
+    function returnBook(transactionId) {
+      const transaction = transactionsData.find(t => t.id === transactionId);
+      if (transaction) {
+        transaction.status = 'returned';
+        const book = booksData.find(b => b.id === transaction.bookId);
+        if (book) book.available++;
+        renderTransactions();
+        showToast(`Returned: ${transaction.book}`);
+      }
+    }
+
+    // Close sidebar when clicking outside on mobile
+    document.addEventListener('click', (e) => {
+      if (window.innerWidth < 1024 && 
+          !sidebar.contains(e.target) && 
+          !mobileMenuBtn.contains(e.target) &&
+          !sidebar.classList.contains('-translate-x-full')) {
+        sidebar.classList.add('-translate-x-full');
+      }
+    });
+
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !addBookModal.classList.contains('hidden')) {
+        closeModalFn();
+      }
+    });
+
+    // ============ INITIALIZATION ============
+    function init() {
+      renderBooks();
+      renderMembers();
+      renderTransactions();
+      renderActivity();
+      renderTrending();
+      renderBorrowChart();
+      renderCategoryChart();
+      renderTopBorrowers();
+    }
+
+    // Initialize when DOM is ready
+    init();
+  </script>
+</body>
+</html>
